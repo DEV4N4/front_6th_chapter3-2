@@ -34,11 +34,11 @@ function App() {
     isRepeating,
     setIsRepeating,
     repeatType,
-    // setRepeatType,
+    setRepeatType,
     repeatInterval,
-    // setRepeatInterval,
+    setRepeatInterval,
     repeatEndDate,
-    // setRepeatEndDate,
+    setRepeatEndDate,
     notificationTime,
     setNotificationTime,
     startTimeError,
@@ -128,6 +128,12 @@ function App() {
           setIsRepeating={setIsRepeating}
           notificationTime={notificationTime}
           setNotificationTime={setNotificationTime}
+          repeatType={repeatType}
+          setRepeatType={setRepeatType}
+          repeatInterval={repeatInterval}
+          setRepeatInterval={setRepeatInterval}
+          repeatEndDate={repeatEndDate}
+          setRepeatEndDate={setRepeatEndDate}
         />
 
         <Stack flex={1} spacing={5}>
