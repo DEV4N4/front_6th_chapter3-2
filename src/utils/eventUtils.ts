@@ -61,7 +61,7 @@ export function createRepeatEvents(events: Event[]) {
   const createdEvents: Event[] = [];
 
   events.forEach((event) => {
-    const { type, interval, endDate } = event.repeat;
+    const { type, endDate } = event.repeat;
 
     if (type === 'none') {
       createdEvents.push(event);
@@ -70,30 +70,29 @@ export function createRepeatEvents(events: Event[]) {
 
     const startDate = new Date(event.date);
     const repeatEndDate = new Date(endDate ?? '');
+    let currentDate = new Date(startDate);
 
-    for (let i = 0; i <= interval; i++) {
-      let currentDate = new Date(startDate);
+    while (currentDate <= repeatEndDate) {
+      createdEvents.push({
+        ...event,
+        date: currentDate.toISOString().split('T')[0],
+      });
 
       if (type === 'daily') {
-        currentDate.setDate(currentDate.getDate() + i);
+        currentDate.setDate(currentDate.getDate() + 1);
       }
 
       if (type === 'weekly') {
-        currentDate.setDate(currentDate.getDate() + i * 7);
+        currentDate.setDate(currentDate.getDate() + 7);
       }
 
       if (type === 'monthly') {
-        currentDate.setMonth(currentDate.getMonth() + i);
+        currentDate.setMonth(currentDate.getMonth() + 1);
       }
 
       if (type === 'yearly') {
-        currentDate.setFullYear(currentDate.getFullYear() + i);
+        currentDate.setFullYear(currentDate.getFullYear() + 1);
       }
-
-      if (currentDate > repeatEndDate) {
-        break;
-      }
-      createdEvents.push({ ...event, date: currentDate.toISOString().split('T')[0] });
     }
   });
 
