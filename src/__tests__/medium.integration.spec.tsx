@@ -418,7 +418,7 @@ describe('반복 일정', () => {
     await user.click(screen.getByLabelText('Next'));
     expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
   });
-  it.only('년 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+  it('년 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
 
@@ -452,5 +452,55 @@ describe('반복 일정', () => {
 
     expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
     expect(eventList.getByText('2026-10-15')).toBeInTheDocument();
+  });
+});
+
+describe('반복 일정 표시', () => {
+  it('반복 일정의 태그 색은 하늘색이어야 한다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day1Cell).getByTestId('event-tag').closest('div')).toHaveStyle({
+      backgroundColor: '#E6F9FF',
+    });
+  });
+
+  it.only('반복 일정에는 Repeat 아이콘이 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day1Cell).getByLabelText('repeat-icon')).toBeInTheDocument();
   });
 });
