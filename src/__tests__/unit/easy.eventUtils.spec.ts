@@ -1,5 +1,5 @@
 import { Event } from '../../types';
-import { getFilteredEvents } from '../../utils/eventUtils';
+import { createRepeatEvents, getFilteredEvents } from '../../utils/eventUtils';
 
 describe('getFilteredEvents', () => {
   const events: Event[] = [
@@ -112,5 +112,84 @@ describe('getFilteredEvents', () => {
   it('빈 이벤트 리스트에 대해 빈 배열을 반환한다', () => {
     const result = getFilteredEvents([], '', new Date('2025-07-01'), 'month');
     expect(result).toHaveLength(0);
+  });
+});
+
+describe('createRepeatEvents', () => {
+  const event: Event = {
+    id: '1',
+    title: '이벤트 1',
+    date: '2025-07-01',
+    startTime: '10:00',
+    endTime: '11:00',
+    description: '',
+    location: '',
+    category: '',
+    repeat: { type: 'none', interval: 0 },
+    notificationTime: 0,
+  };
+
+  describe('none', () => {
+    it('반복 정보가 없는 이벤트는 그대로 반환한다', () => {
+      const result = createRepeatEvents([event]);
+      expect(result).toHaveLength(1);
+      expect(result[0].title).toBe('이벤트 1');
+    });
+  });
+
+  describe('daily', () => {
+    it('매일 반복되는 이벤트를 생성한다', () => {
+      const dailyEvent = {
+        ...event,
+        repeat: { type: 'daily', interval: 3, endDate: '2025-07-04' },
+      } as const;
+      const result = createRepeatEvents([dailyEvent]);
+      expect(result).toHaveLength(4);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1', '이벤트 1']);
+      expect(result.map((e) => e.date)).toEqual([
+        '2025-07-01',
+        '2025-07-02',
+        '2025-07-03',
+        '2025-07-04',
+      ]);
+    });
+  });
+
+  describe('weekly', () => {
+    it('매주 반복되는 이벤트를 생성한다', () => {
+      const weeklyEvent = {
+        ...event,
+        repeat: { type: 'weekly', interval: 2, endDate: '2025-07-15' },
+      } as const;
+      const result = createRepeatEvents([weeklyEvent]);
+      expect(result).toHaveLength(3);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1']);
+      expect(result.map((e) => e.date)).toEqual(['2025-07-01', '2025-07-08', '2025-07-15']);
+    });
+  });
+
+  describe('monthly', () => {
+    it('매월 반복되는 이벤트를 생성한다', () => {
+      const monthlyEvent = {
+        ...event,
+        repeat: { type: 'monthly', interval: 2, endDate: '2025-10-01' },
+      } as const;
+      const result = createRepeatEvents([monthlyEvent]);
+      expect(result).toHaveLength(3);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1']);
+      expect(result.map((e) => e.date)).toEqual(['2025-07-01', '2025-08-01', '2025-09-01']);
+    });
+  });
+
+  describe('yearly', () => {
+    it('매년 반복되는 이벤트를 생성한다', () => {
+      const yearlyEvent = {
+        ...event,
+        repeat: { type: 'yearly', interval: 2, endDate: '2028-01-01' },
+      } as const;
+      const result = createRepeatEvents([yearlyEvent]);
+      expect(result).toHaveLength(3);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1']);
+    });
   });
 });

@@ -56,3 +56,46 @@ export function getFilteredEvents(
 
   return searchedEvents;
 }
+
+export function createRepeatEvents(events: Event[]) {
+  const createdEvents: Event[] = [];
+
+  events.forEach((event) => {
+    const { type, interval, endDate } = event.repeat;
+
+    if (type === 'none') {
+      createdEvents.push(event);
+      return;
+    }
+
+    const startDate = new Date(event.date);
+    const repeatEndDate = new Date(endDate ?? '');
+
+    for (let i = 0; i <= interval; i++) {
+      let currentDate = new Date(startDate);
+
+      if (type === 'daily') {
+        currentDate.setDate(currentDate.getDate() + i);
+      }
+
+      if (type === 'weekly') {
+        currentDate.setDate(currentDate.getDate() + i * 7);
+      }
+
+      if (type === 'monthly') {
+        currentDate.setMonth(currentDate.getMonth() + i);
+      }
+
+      if (type === 'yearly') {
+        currentDate.setFullYear(currentDate.getFullYear() + i);
+      }
+
+      if (currentDate > repeatEndDate) {
+        break;
+      }
+      createdEvents.push({ ...event, date: currentDate.toISOString().split('T')[0] });
+    }
+  });
+
+  return createdEvents;
+}
