@@ -5,6 +5,7 @@ import { UserEvent, userEvent } from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { SnackbarProvider } from 'notistack';
 import { ReactElement } from 'react';
+// import { debug } from 'vitest-preview';
 
 import {
   setupMockHandlerCreation,
@@ -33,11 +34,8 @@ const setup = (element: ReactElement) => {
 };
 
 // ! Hard 여기 제공 안함
-const saveSchedule = async (
-  user: UserEvent,
-  form: Omit<Event, 'id' | 'notificationTime' | 'repeat'>
-) => {
-  const { title, date, startTime, endTime, location, description, category } = form;
+const saveSchedule = async (user: UserEvent, form: Omit<Event, 'id' | 'notificationTime'>) => {
+  const { title, date, startTime, endTime, location, description, category, repeat } = form;
 
   await user.click(screen.getAllByText('일정 추가')[0]);
 
@@ -50,6 +48,13 @@ const saveSchedule = async (
   await user.click(screen.getByLabelText('카테고리'));
   await user.click(within(screen.getByLabelText('카테고리')).getByRole('combobox'));
   await user.click(screen.getByRole('option', { name: `${category}-option` }));
+
+  if (repeat.type !== 'none') {
+    await user.click(within(screen.getByLabelText('반복유형')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: `${repeat.type}-option` }));
+    await user.type(screen.getByLabelText('반복 간격'), repeat.interval.toString());
+    await user.type(screen.getByLabelText('반복 종료일'), repeat.endDate ?? '');
+  }
 
   await user.click(screen.getByTestId('event-submit-button'));
 };
@@ -68,6 +73,7 @@ describe('일정 CRUD 및 기본 기능', () => {
       description: '프로젝트 진행 상황 논의',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const eventList = within(screen.getByTestId('event-list'));
@@ -140,6 +146,7 @@ describe('일정 뷰', () => {
       description: '이번주 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
@@ -173,6 +180,7 @@ describe('일정 뷰', () => {
       description: '이번달 팀 회의입니다.',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     const monthView = within(screen.getByTestId('month-view'));
@@ -295,6 +303,7 @@ describe('일정 충돌', () => {
       description: '설명',
       location: '회의실 A',
       category: '업무',
+      repeat: { type: 'none', interval: 0 },
     });
 
     expect(screen.getByText('일정 겹침 경고')).toBeInTheDocument();
@@ -339,4 +348,109 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   });
 
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
+});
+
+describe('반복 일정', () => {
+  it('일 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-17' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-16')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-17')).toBeInTheDocument();
+  });
+  it('주 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-29' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-22')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-29')).toBeInTheDocument();
+  });
+  it('월 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-11-15' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+    expect(eventList.getByText('2025-11-15')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+    expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
+  });
+  it.only('년 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-15',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'yearly', interval: 1, endDate: '2026-10-15' },
+    });
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Next'));
+
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
+    expect(eventList.getByText('2026-10-15')).toBeInTheDocument();
+  });
 });

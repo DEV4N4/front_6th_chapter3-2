@@ -16,6 +16,7 @@ import { useNotifications } from './hooks/useNotifications.ts';
 import { useSearch } from './hooks/useSearch.ts';
 import { Event, EventForm } from './types';
 import { findOverlappingEvents } from './utils/eventOverlap';
+import { createRepeatEvents } from './utils/eventUtils.ts';
 
 function App() {
   const {
@@ -51,8 +52,9 @@ function App() {
     editEvent,
   } = useEventForm();
 
-  const { events, saveEvent, deleteEvent } = useEventOperations(Boolean(editingEvent), () =>
-    setEditingEvent(null)
+  const { events, saveEvent, deleteEvent, saveRepeatEvents } = useEventOperations(
+    Boolean(editingEvent),
+    () => setEditingEvent(null)
   );
 
   const { notifications, notifiedEvents, setNotifications } = useNotifications(events);
@@ -97,7 +99,13 @@ function App() {
       setOverlappingEvents(overlapping);
       setIsOverlapDialogOpen(true);
     } else {
-      await saveEvent(eventData);
+      if (isRepeating && repeatType !== 'none') {
+        const repeatEvents = createRepeatEvents([eventData as Event]);
+        await saveRepeatEvents(repeatEvents);
+      } else {
+        await saveEvent(eventData);
+      }
+
       resetForm();
     }
   };
