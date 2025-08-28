@@ -94,7 +94,10 @@ function App() {
         : {
             type: isRepeating ? repeatType : 'none',
             interval: repeatInterval,
-            endDate: repeatEndDate || undefined,
+            endDate:
+              new Date(repeatEndDate || '') > new Date('2025-10-30')
+                ? new Date('2025-10-30').toISOString().split('T')[0]
+                : repeatEndDate || undefined,
           },
       notificationTime,
     };

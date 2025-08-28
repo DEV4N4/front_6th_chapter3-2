@@ -399,7 +399,7 @@ describe('반복 일정', () => {
 
     await saveSchedule(user, {
       title: '새 회의',
-      date: '2025-10-15',
+      date: '2025-09-15',
       startTime: '09:00',
       endTime: '10:00',
       description: '설명',
@@ -409,11 +409,12 @@ describe('반복 일정', () => {
     });
 
     const eventList = within(screen.getByTestId('event-list'));
+    await user.click(screen.getByLabelText('Previous'));
     expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
-    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
+    expect(eventList.getByText('2025-09-15')).toBeInTheDocument();
 
     await user.click(screen.getByLabelText('Next'));
-    expect(eventList.getByText('2025-11-15')).toBeInTheDocument();
+    expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
 
     await user.click(screen.getByLabelText('Next'));
     expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
@@ -424,7 +425,7 @@ describe('반복 일정', () => {
 
     await saveSchedule(user, {
       title: '새 회의',
-      date: '2025-10-15',
+      date: '2024-10-15',
       startTime: '09:00',
       endTime: '10:00',
       description: '설명',
@@ -437,21 +438,21 @@ describe('반복 일정', () => {
     expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
     expect(eventList.getByText('2025-10-15')).toBeInTheDocument();
 
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
-    await user.click(screen.getByLabelText('Next'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
 
     expect(eventList.queryAllByText('새 회의')).toHaveLength(1);
-    expect(eventList.getByText('2026-10-15')).toBeInTheDocument();
+    expect(eventList.getByText('2024-10-15')).toBeInTheDocument();
   });
 });
 
