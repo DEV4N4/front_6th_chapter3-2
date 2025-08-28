@@ -350,7 +350,7 @@ it('notificationTime을 10으로 하면 지정 시간 10분 전 알람 텍스트
   expect(screen.getByText('10분 후 기존 회의 일정이 시작됩니다.')).toBeInTheDocument();
 });
 
-describe('반복 일정', () => {
+describe('반복 일정 단위', () => {
   it('일 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
@@ -372,6 +372,7 @@ describe('반복 일정', () => {
     expect(eventList.getByText('2025-10-16')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-17')).toBeInTheDocument();
   });
+
   it('주 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
@@ -393,6 +394,7 @@ describe('반복 일정', () => {
     expect(eventList.getByText('2025-10-22')).toBeInTheDocument();
     expect(eventList.getByText('2025-10-29')).toBeInTheDocument();
   });
+
   it('월 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
@@ -419,6 +421,7 @@ describe('반복 일정', () => {
     await user.click(screen.getByLabelText('Next'));
     expect(eventList.getByText('검색 결과가 없습니다.')).toBeInTheDocument();
   });
+
   it('년 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
@@ -619,5 +622,152 @@ describe('반복 일정 단일 수정', () => {
 
       expect(eventList.queryAllByText('새 회의')).toHaveLength(2);
     });
+  });
+});
+
+describe.only('반복 일정 Week View', () => {
+  it('Week View에서 일 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+    });
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    const day1Cell = screen.getByTestId('1-day-cell');
+    const day2Cell = screen.getByTestId('2-day-cell');
+    const day3Cell = screen.getByTestId('3-day-cell');
+
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day2Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day3Cell).getByTestId('event-tag')).toBeInTheDocument();
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+  });
+
+  it('Week View에서 주 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'weekly', interval: 1, endDate: '2025-10-15' },
+    });
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    expect(screen.getByText('2025년 10월 1주')).toBeInTheDocument();
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+    expect(screen.getByText('2025년 10월 2주')).toBeInTheDocument();
+    const day8Cell = screen.getByTestId('8-day-cell');
+    expect(within(day8Cell).getByTestId('event-tag')).toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Next'));
+    expect(screen.getByText('2025년 10월 3주')).toBeInTheDocument();
+    const day15Cell = screen.getByTestId('15-day-cell');
+    expect(within(day15Cell).getByTestId('event-tag')).toBeInTheDocument();
+  });
+
+  it('Week View에서 월 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-09-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'monthly', interval: 1, endDate: '2025-10-01' },
+    });
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+    await user.click(screen.getByLabelText('Previous'));
+
+    expect(screen.getByText('2025년 9월 1주')).toBeInTheDocument();
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+  });
+
+  it('Week View 에서도 반복 일정의 태그 색은 하늘색이어야 한다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+    });
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day1Cell).getByTestId('event-tag').closest('div')).toHaveStyle({
+      backgroundColor: '#E6F9FF',
+    });
+  });
+
+  it('Week View 에서도 반복 일정에는 Repeat 아이콘이 표시된다', async () => {
+    setupMockHandlerCreation();
+    const { user } = setup(<App />);
+
+    await saveSchedule(user, {
+      title: '새 회의',
+      date: '2025-10-01',
+      startTime: '09:00',
+      endTime: '10:00',
+      description: '설명',
+      location: '회의실 A',
+      category: '업무',
+      repeat: { type: 'daily', interval: 1, endDate: '2025-10-03' },
+    });
+
+    await user.click(within(screen.getByLabelText('뷰 타입 선택')).getByRole('combobox'));
+    await user.click(screen.getByRole('option', { name: 'week-option' }));
+
+    const eventList = within(screen.getByTestId('event-list'));
+    expect(eventList.queryAllByText('새 회의')).toHaveLength(3);
+
+    const day1Cell = screen.getByTestId('1-day-cell');
+    expect(within(day1Cell).getByTestId('event-tag')).toBeInTheDocument();
+    expect(within(day1Cell).getByLabelText('repeat-icon')).toBeInTheDocument();
   });
 });

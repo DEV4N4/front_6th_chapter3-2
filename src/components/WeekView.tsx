@@ -1,4 +1,4 @@
-import { Notifications } from '@mui/icons-material';
+import { Notifications, Repeat } from '@mui/icons-material';
 import {
   TableCell,
   TableRow,
@@ -61,6 +61,7 @@ export const WeekView = ({
                     .filter((event) => new Date(event.date).toDateString() === date.toDateString())
                     .map((event) => {
                       const isNotified = notifiedEvents.includes(event.id);
+                      const isRepeating = event.repeat.type !== 'none';
                       return (
                         <Box
                           data-testid="event-tag"
@@ -68,7 +69,8 @@ export const WeekView = ({
                           sx={{
                             p: 0.5,
                             my: 0.5,
-                            backgroundColor: isNotified ? '#ffebee' : '#f5f5f5',
+                            backgroundColor:
+                              (isNotified && '#ffebee') || (isRepeating && '#E6F9FF') || '#f5f5f5',
                             borderRadius: 1,
                             fontWeight: isNotified ? 'bold' : 'normal',
                             color: isNotified ? '#d32f2f' : 'inherit',
@@ -79,6 +81,7 @@ export const WeekView = ({
                         >
                           <Stack direction="row" spacing={1} alignItems="center">
                             {isNotified && <Notifications fontSize="small" />}
+                            {isRepeating && <Repeat aria-label="repeat-icon" fontSize="small" />}
                             <Typography
                               variant="caption"
                               noWrap
