@@ -70,29 +70,69 @@ export function createRepeatEvents(events: Event[]) {
 
     const startDate = new Date(event.date);
     const repeatEndDate = new Date(endDate ?? '');
-    let currentDate = new Date(startDate);
 
-    while (currentDate <= repeatEndDate) {
-      createdEvents.push({
-        ...event,
-        date: currentDate.toISOString().split('T')[0],
-      });
-
-      if (type === 'daily') {
-        currentDate.setDate(currentDate.getDate() + 1);
+    const push = (d: Date) => {
+      if (d <= repeatEndDate) {
+        createdEvents.push({
+          ...event,
+          date: d.toISOString().split('T')[0],
+        });
       }
+    };
 
-      if (type === 'weekly') {
-        currentDate.setDate(currentDate.getDate() + 7);
+    if (type === 'daily') {
+      for (let d = new Date(startDate); d <= repeatEndDate; d.setDate(d.getDate() + 1)) {
+        push(new Date(d));
       }
+      return;
+    }
 
-      if (type === 'monthly') {
-        currentDate.setMonth(currentDate.getMonth() + 1);
+    if (type === 'weekly') {
+      for (let d = new Date(startDate); d <= repeatEndDate; d.setDate(d.getDate() + 7)) {
+        push(new Date(d));
       }
+      return;
+    }
 
-      if (type === 'yearly') {
-        currentDate.setFullYear(currentDate.getFullYear() + 1);
+    if (type === 'monthly') {
+      const anchorDay = startDate.getDate();
+      let y = startDate.getFullYear();
+      let m = startDate.getMonth();
+
+      while (true) {
+        const candidate = new Date(y, m, anchorDay);
+
+        if (candidate > repeatEndDate) break;
+
+        if (candidate.getMonth() === m && candidate.getDate() === anchorDay) {
+          push(candidate);
+        }
+
+        m += 1;
+        if (m > 11) {
+          m = 0;
+          y += 1;
+        }
       }
+      return;
+    }
+
+    if (type === 'yearly') {
+      const anchorDay = startDate.getDate();
+      const anchorMonth = startDate.getMonth();
+      let y = startDate.getFullYear();
+
+      while (true) {
+        const candidate = new Date(y, anchorMonth, anchorDay);
+
+        if (candidate > repeatEndDate) break;
+
+        if (candidate.getMonth() === anchorMonth && candidate.getDate() === anchorDay) {
+          push(candidate);
+        }
+        y += 1;
+      }
+      return;
     }
   });
 

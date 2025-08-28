@@ -1,3 +1,5 @@
+// import { debug } from 'vitest-preview';
+
 import { Event } from '../../types';
 import { createRepeatEvents, getFilteredEvents } from '../../utils/eventUtils';
 
@@ -175,9 +177,26 @@ describe('createRepeatEvents', () => {
         repeat: { type: 'monthly', interval: 2, endDate: '2025-10-01' },
       } as const;
       const result = createRepeatEvents([monthlyEvent]);
+      expect(result).toHaveLength(4);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1', '이벤트 1']);
+      expect(result.map((e) => e.date)).toEqual([
+        '2025-07-01',
+        '2025-08-01',
+        '2025-09-01',
+        '2025-10-01',
+      ]);
+    });
+
+    it('31일 이벤트를 생성할 때, 31일이 있는 달의 이벤트만 생성한다', () => {
+      const monthlyEvent = {
+        ...event,
+        date: '2025-07-31',
+        repeat: { type: 'monthly', interval: 1, endDate: '2025-10-31' },
+      } as const;
+      const result = createRepeatEvents([monthlyEvent]);
       expect(result).toHaveLength(3);
       expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1']);
-      expect(result.map((e) => e.date)).toEqual(['2025-07-01', '2025-08-01', '2025-09-01']);
+      expect(result.map((e) => e.date)).toEqual(['2025-07-31', '2025-08-31', '2025-10-31']);
     });
   });
 
@@ -190,6 +209,18 @@ describe('createRepeatEvents', () => {
       const result = createRepeatEvents([yearlyEvent]);
       expect(result).toHaveLength(3);
       expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1', '이벤트 1']);
+    });
+
+    it('(윤년) 2월 29일 이벤트를 생성할 때, 2월 29일이 있는 해의 이벤트만 생성한다', () => {
+      const monthlyEvent = {
+        ...event,
+        date: '2020-02-29',
+        repeat: { type: 'yearly', interval: 1, endDate: '2025-10-31' },
+      } as const;
+      const result = createRepeatEvents([monthlyEvent]);
+      expect(result).toHaveLength(2);
+      expect(result.map((e) => e.title)).toEqual(['이벤트 1', '이벤트 1']);
+      expect(result.map((e) => e.date)).toEqual(['2020-02-29', '2024-02-29']);
     });
   });
 });
