@@ -3,3 +3,9 @@
 node_modules
 .coverage
 .vitest-preview
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
