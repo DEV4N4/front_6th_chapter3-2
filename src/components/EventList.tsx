@@ -52,6 +52,7 @@ export const EventList = ({
         filteredEvents.map((event) => (
           <Box
             data-testid="event-card"
+            aria-label={`${new Date(event.date).getDate()}-event-card`}
             key={event.id}
             sx={{ border: 1, borderRadius: 2, p: 3, width: '100%' }}
           >
