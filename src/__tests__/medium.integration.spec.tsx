@@ -625,7 +625,7 @@ describe('반복 일정 단일 수정', () => {
   });
 });
 
-describe.only('반복 일정 Week View', () => {
+describe('반복 일정 Week View', () => {
   it('Week View에서 일 단위 반복 일정을 추가하면 해당 일정이 반복되어 표시된다', async () => {
     setupMockHandlerCreation();
     const { user } = setup(<App />);
